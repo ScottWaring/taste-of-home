@@ -4,4 +4,7 @@ Rails.application.routes.draw do
   post "/users", to: 'users#show'
   # resources :search, only: [:index, :show, :create]
   post "/search", to: 'search#create'
+  put "/favorites", to: 'favorites#create'
+  delete "/favorites/:id", to: 'favorites#destroy'
+  post "/reviews", to: 'reviews#create'
 end

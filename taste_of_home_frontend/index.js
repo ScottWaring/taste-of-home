@@ -1,9 +1,46 @@
 document.addEventListener("DOMContentLoaded", init)
 let BASE_USER_URL = 'http://localhost:3000/users'
 let BASE_SEARCH_URL = 'http://localhost:3000/search'
+let BASE_FAVORITE_URL = 'http://localhost:3000/favorites'
+let BASE_REVIEW_URL = 'http://localhost:3000/reviews'
 let formInput = document.querySelector('form')
 let content = document.getElementById('content-box')
 let userDisplay = document.getElementById("user-display")
+
+// function to fetch and delete instance of favorite
+function deleteFavorite(favoriteId, marketId){
+  fetch(BASE_FAVORITE_URL+`/${favoriteId}`,{
+    method: 'DELETE'
+    })
+  .then(function(){
+    let favDiv = document.getElementById(`favorite-div-${marketId}`)
+    favDiv.innerHTML = ''
+    favDiv.innerHTML = `<p class="favorite-tag">Favorite</p>`
+  })
+}
+
+///function to fetch and create favorite from backend
+function createFavorite(marketId, userId){
+  fetch(BASE_FAVORITE_URL,{
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      market_id: marketId,
+      user_id: userId
+    })
+  })
+  .then(function(response){
+    return response.json()
+  })
+  .then(function(responseJson){
+    console.log(responseJson.id)
+    let favDiv = document.getElementById(`favorite-div-${marketId}`)
+    favDiv.innerHTML = ''
+    favDiv.innerHTML = `<p data-id="${responseJson.id}" class="unfavorite-tag">Unfavorite</p>`
+  })
+}
 
 /// function to fetch and add users reviews to their profile
 function renderUserReviews(userId) {
@@ -74,10 +111,25 @@ function createOrLogIn() {
   })
 }
 
-
+//function to fetch review from backend
+function createReview(body){
+  fetch(BASE_REVIEW_URL,{
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  })
+  .then(function(response){
+    return response.json()
+  })
+  .then(function(responseJson){
+    console.log(responseJson)
+  })
+}
 ///function to create review form
-function createReview(id) {
-  let showForm = document.getElementById(`display-reviews-box-${id}`)
+function createReviewForm(marketId) {
+  let showForm = document.getElementById(`display-reviews-box-${marketId}`)
   showForm.innerHTML += `<form id="add-review-form">
   <input type="text" name="Title" placeholder="Review Title" value="">
   <textarea name="Review Content" placeholder="Review Content Here" value=""></textarea>
@@ -85,7 +137,15 @@ function createReview(id) {
   </form>`
   showForm.addEventListener("submit", (event) => {
     event.preventDefault()
-    console.log(user)
+    let userId = 5
+    let body = {
+      review_title: event.target[0].value,
+      review_text: event.target[1].value,
+      user_id: userId,
+      market_id: marketId
+    }
+    console.log(body)
+    createReview(body)
     showForm.innerHTML = ""
   })
 }
@@ -93,11 +153,25 @@ function createReview(id) {
 /////button creation
 window.addEventListener("click", (event) => {
   if (event.target.className === "add-review-tag") {
-    let businessId = event.target.parentElement.dataset.id
-    createReview(businessId)
+    let marketId = event.target.parentElement.dataset.id
+    createReviewForm(marketId)
+  }
+  if (event.target.className ==="favorite-tag") {
+    let marketId = event.target.parentElement.parentElement.dataset.id
+    let userId = 5
+    createFavorite(marketId, userId)
+  }
+  if (event.target.className ==="unfavorite-tag") {
+    let favoriteId = event.target.dataset.id
+    let marketId = event.target.parentElement.parentElement.dataset.id
+    deleteFavorite(favoriteId,marketId)
   }
   if (event.target.id === "user-display") {
     createOrLogIn()
+  }
+  if (event.target.className === "see-reviews-tag"){
+    let marketId = event.target.parentElement.parentElement.dataset.id
+    console.log(marketId)
   }
 })
 
@@ -153,19 +227,18 @@ function callYelp(body) {
 function renderResultsToPage(results) {
   content.innerHTML = ""
   const busArr = results.businesses
-  for(place of busArr) {
-    console.log(place)
-    content.innerHTML += `<div data-id="${place.id}" class="business-box">
-    <div class="business-thumbnail"><img height="20%" width="20%" src="${place.image_url}"></div>
+  for(market of busArr) {
+    // console.log(market)
+    content.innerHTML += `<div data-id="${market.id}" class="business-box">
+    <div class="business-thumbnail"><img height="20%" width="20%" src="${market.image_url}"></div>
       <div class="business-info">
-        <h4><a href="${place.url}">${place.name}</a></h4>
-        <p>${place.location.display_address.join(" ")}</p>
-        <p><a href="tel:${place.phone}">${place.display_phone}</a></p>
+        <h4><a href="${market.url}">${market.name}</a></h4>
+        <p>${market.location.display_address.join(" ")}</p>
+        <p><a href="tel:${market.phone}">${market.display_phone}</a></p>
       </div>
-      <p class="see-reviews-tag">See Reviews</p>
       <p class="add-review-tag">Add Review</p>
-      <p class="favorite-tag">Favorite</p>
-      <div id="display-reviews-box-${place.id}"></div>
+    <div id="favorite-div-${market.id}"> <p class="favorite-tag">Favorite</p></div>
+      <div id="display-reviews-box-${market.id}"><p class="see-reviews-tag">See Reviews</p></div>
     </div>`
   }
 }
