@@ -1,6 +1,6 @@
 class FavoritesController < ApplicationController
   def create
-    # byebug
+    Market.fetchFromYelp(params[:market_id])
     @favorite = Favorite.create(favorite_params)
     render json: @favorite
   end
@@ -10,6 +10,10 @@ class FavoritesController < ApplicationController
       @favorite.destroy
   end
 
+  def user_show
+    @favorites = Favorite.all.select{|f| f.user_id == params[:id].to_i}
+    render json: @favorites
+  end
 
   private
 

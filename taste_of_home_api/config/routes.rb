@@ -6,5 +6,9 @@ Rails.application.routes.draw do
   post "/search", to: 'search#create'
   put "/favorites", to: 'favorites#create'
   delete "/favorites/:id", to: 'favorites#destroy'
+  get "/favorites/user/:id", to: 'favorites#user_show'
   post "/reviews", to: 'reviews#create'
+  get "/reviews/mkt/:id", to: 'reviews#market_show'
+  get "/reviews/user/:id", to: 'reviews#user_show'
+  delete "/reviews/:id", to: 'reviews#destroy'
 end

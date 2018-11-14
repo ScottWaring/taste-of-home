@@ -10,11 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_11_13_151852) do
+ActiveRecord::Schema.define(version: 2018_11_14_212104) do
 
   create_table "favorites", force: :cascade do |t|
     t.integer "user_id"
     t.string "market_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "markets", force: :cascade do |t|
+    t.string "image_url"
+    t.string "name"
+    t.string "address"
+    t.integer "phone_number"
+    t.string "display_phone"
+    t.string "web_url"
+    t.string "yelp_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -24,6 +36,7 @@ ActiveRecord::Schema.define(version: 2018_11_13_151852) do
     t.string "market_id"
     t.text "review_text"
     t.string "review_title"
+    t.string "user_name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

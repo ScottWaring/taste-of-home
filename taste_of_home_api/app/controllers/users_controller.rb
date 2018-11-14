@@ -11,7 +11,6 @@ class UsersController < ApplicationController
     @user = User.find_or_create_by(user_params)
     @user.save
     if @user
-      # session_log(@user)
       render json: @user
     end
   end
