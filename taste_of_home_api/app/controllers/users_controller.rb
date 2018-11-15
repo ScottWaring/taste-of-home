@@ -5,11 +5,16 @@ class UsersController < ApplicationController
   end
 
   def show
+    @user = User.find_by(name: params[:name], password: params[:password])
+    if @user == nil
+      render json: {error: true}
+    else
+      render json: @user
+    end
   end
 
   def create
-    @user = User.find_or_create_by(user_params)
-    @user.save
+    @user = User.create(user_params)
     if @user
       render json: @user
     end

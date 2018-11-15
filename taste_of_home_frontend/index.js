@@ -50,6 +50,7 @@ function createFavorite(marketId, userId){
   })
   .then(function(favoriteJson){
     userStore["favorites"].push(favoriteJson)
+    fetchAndPushMarket(favoriteJson.market_id)
     let favDiv = document.getElementById(`favorite-div-${marketId}`)
     favDiv.innerHTML = ''
     favDiv.innerHTML = `<p data-id="${favoriteJson.id}" class="unfavorite-tag">Unfavorite</p>`
@@ -89,7 +90,14 @@ function renderUserReviews(display = false) {
         fetchAndPushMarket(review.market_id)
         userStore["reviews"].push(review)
         if (display === true) {
+          let market
+          for(marketObj of userStore["markets"]){
+            if (review.market_id === marketObj.yelp_id){
+              market = marketObj
+            }
+          }
           userReviews.innerHTML += `<div id="market-review-${review.id}" class="market-reviews">
+          <p> Market Name: ${market.name} </p>
           <p>Created at ${review.created_at}</p>
           <p class='title'>${review.review_title}</p>
           <p class='review-content'> ${review.review_text}</p>
@@ -116,7 +124,17 @@ function renderUserFavorites(display = false) {
         fetchAndPushMarket(favorite.market_id)
         userStore["favorites"].push(favorite)
         if (display === true) {
-          userFavorites.innerHTML += ``
+          let market
+          for(marketObj of userStore["markets"]){
+            if(marketObj["yelp_id"] === favorite.market_id){
+              market = marketObj
+            }
+          }
+          userFavorites.innerHTML += `
+              <div data-id="${market.yelp_id}" class="favorite-box">
+              <div class="business-thumbnail">
+              <img height="20%" width="20%" src="${market.image_url}"></div>
+              <h4><a href="${market.web_url}">${market.name}</a></h4></div>`
         }
       }
     } else if (favoriteArr.length === 0 && display === true) {
@@ -127,20 +145,18 @@ function renderUserFavorites(display = false) {
 
 ////funtion to show user logged in on header bar ----------------------  UF
 function userLoggedInDisplay() {
-  userDisplay.innerHTML= `Logged In As: ${localStorage.userName} <p id="logout-tag">Logout</p>`
+  userDisplay.innerHTML= `<div><p id='user-logged-in'>Logged In As: ${localStorage.userName} </p><p id="logout-tag">Logout</p></div>`
   content.innerHTML = '<img id="image-placeholder" src="images/noodles.jpeg">'
 }
 
 ///funtion to show user page -------------------------------------------  UF
-function displayUser(user) {
+function displayUser() {
   let display = true
-  localStorage.setItem('userId', user.id)
-  localStorage.setItem('userName', user.name)
   userLoggedInDisplay()
   content.innerHTML = `<div id="user-div">
   <div id="user-info">
-    <h3>${user.name}</h3>
-    <h4>Member Since: ${user.created_at}</h4>
+    <h3>${localStorage.userName}</h3>
+    <h4>Member Since: ${localStorage.userSince}</h4>
   </div>
   <div id="user-favorites">Favorites: </div>
   <div id="user-reviews">Reviews: </div>
@@ -151,13 +167,13 @@ function displayUser(user) {
 
 
 ///function to fetch user from backend ----------------------------------  UF
-function fetchUser(userName, passWord) {
+function fetchUser(userName, passWord, doThing) {
   let body = {
     name: userName,
     password: passWord
   }
   fetch(BASE_USER_URL, {
-    method: 'POST',
+    method: doThing,
     headers: {
       "Content-Type": "application/json"
     },
@@ -167,7 +183,16 @@ function fetchUser(userName, passWord) {
     return response.json()
   })
   .then(function(userObject) {
-    displayUser(userObject)
+    console.log(userObject)
+    if(userObject.error === true){
+      alert('You need an account to log in!!')
+      userSignUp()
+    } else{
+      localStorage.setItem('userId', userObject.id)
+      localStorage.setItem('userName', userObject.name)
+      localStorage.setItem('userSince', userObject.created_at)
+    displayUser()
+   }
   })
 }
 
@@ -179,14 +204,43 @@ function createOrLogIn() {
       <input type="password" name="password" placeholder="Password" value=""><br>
       <input type="submit" value="Log In">
     </form>
+    <div id="sign-up">Sign Up</div>
   </div>`
   let userForm = document.getElementById("add-or-create-user")
   userForm.addEventListener("submit", (event) => {
     event.preventDefault()
     let userName = event.target[0].value
     let password = event.target[1].value
-    fetchUser(userName, password)
+    let doThing = 'PATCH'
+    fetchUser(userName, password, doThing)
   })
+}
+
+/// function to user sign up
+function userSignUp(){
+  content.innerHTML = `<div id="add-user-form-div">
+    <form id="add-or-create-user">
+      <input type="text" name="user-name" placeholder="Name" value=""><br>
+      <input type="password" name="password" placeholder="Password" value=""><br>
+      <input type="password" name="password" placeholder="Password" value=""><br>
+      <input type="submit" value="sign up">
+    </form>
+  </div>`
+  let userForm = document.getElementById("add-or-create-user")
+  userForm.addEventListener("submit", (event) => {
+    event.preventDefault()
+    let userName = event.target[0].value
+    let password1 = event.target[1].value
+    let password2 = event.target[2].value
+    let doThing = 'POST'
+    if(password1 === password2){
+      fetchUser(userName, password1, doThing)
+    }
+    else {
+      alert("Your password doesn't match")
+    }
+  })
+
 }
 
 ///funtion to log user out --------------------------------------------  UF
@@ -225,6 +279,7 @@ function createReview(body){
     return review.json()
   })
   .then(function(reviewJson){
+    fetchAndPushMarket(reviewJson.market_id)
     userStore["reviews"].push(reviewJson)
   })
 }
@@ -240,6 +295,7 @@ function createReviewForm(marketId) {
   reviewDiv.addEventListener("submit", (event) => {
     event.preventDefault()
     let body = {
+      user_name: localStorage.userName,
       review_title: event.target[0].value,
       review_text: event.target[1].value,
       user_id: localStorage.userId,
@@ -322,6 +378,12 @@ window.addEventListener("click", (event) => {
   if (event.target.id === "logout-tag") {
     userLogOut()
   }
+  if(event.target.id === "user-logged-in"){
+    displayUser()
+  }
+  if(event.target.id === "sign-up"){
+    userSignUp()
+  }
 })
 
 ////search bar value ------------------------------------------- tBBC
@@ -389,8 +451,8 @@ function renderResultsToPage(results) {
         <p><a href="tel:${market.phone}">${market.display_phone}</a></p>
       </div>
       <p class="add-review-tag">Add Review</p>
-    <div id="favorite-div-${market.id}"><p class="favorite-tag">Favorite</p></div>
-      <div id="display-reviews-box-${market.id}"><p class="see-reviews-tag">See Reviews</p></div>
+    <div id="favorite-div-${market.id}" class="fav-div-box"><p class="favorite-tag">Favorite</p></div>
+      <div id="display-reviews-box-${market.id}" class="review-box"><p class="see-reviews-tag">See Reviews</p></div>
     </div>`
     for (favs of userStore["favorites"]) {
       let favDiv = document.getElementById(`favorite-div-${market.id}`)

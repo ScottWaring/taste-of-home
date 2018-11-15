@@ -3,7 +3,47 @@
   width: 100%;
 }
 
-
 #add-user-form-div {
   align: center;
+}
+
+#title-display {
+  position: relative;
+  align: center;
+}
+
+#title-display h1{
+  position: relative;
+  text-align: center;
+}
+
+#search-inputs {
+  float: right;
+}
+
+.business-box {
+  display: block;
+}
+
+.business_thumbnail {
+    display: inline-block;
+  /* position: relative; */
+  float: left;
+  width: 25%;
+}
+
+.business-info {
+  display: inline-block;
+  float: left;
+  width: 50%;
+}
+
+.fav-div-box {
+  float: right;
+  height: 50%;
+}
+
+.review-box {
+  float: right;
+  height: 50%;
 }

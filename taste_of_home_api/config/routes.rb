@@ -1,7 +1,8 @@
 Rails.application.routes.draw do
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   resources :users, only: [:show, :create]
-  post "/users", to: 'users#show'
+  patch "/users", to: 'users#show'
+  post "/users", to: 'users#create'
   # resources :search, only: [:index, :show, :create]
   post "/search", to: 'search#create'
   put "/favorites", to: 'favorites#create'
@@ -12,4 +13,5 @@ Rails.application.routes.draw do
   get "/reviews/user/:id", to: 'reviews#user_show'
   delete "/reviews/:id", to: 'reviews#destroy'
   get "/markets/:id", to: 'markets#show'
+
 end
