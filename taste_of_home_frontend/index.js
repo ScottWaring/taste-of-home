@@ -6,20 +6,27 @@ let BASE_USER_URL = 'http://localhost:3000/users'
 let BASE_SEARCH_URL = 'http://localhost:3000/search'
 let BASE_FAVORITE_URL = 'http://localhost:3000/favorites'
 let BASE_REVIEW_URL = 'http://localhost:3000/reviews'
+let BASE_MARKET_URL = 'http://localhost:3000/markets'
 let formInput = document.querySelector('form')
 let content = document.getElementById('content-box')
 let userDisplay = document.getElementById("user-display")
-let userStore = {favorites: [], reviews:[]}
+let userStore = {favorites: [], reviews:[], markets: []}
 
 ///////////////////////////////////////////////////////////////////////////
 ///////    ********* Favorite -- Functions ********************
 
 // function to fetch and delete instance of favorite ---------------------- FF
 function deleteFavorite(favoriteId, marketId){
-  fetch(BASE_FAVORITE_URL+`/${favoriteId}`,{
+  let url = BASE_FAVORITE_URL+`/${favoriteId}`
+  fetch(url, {
     method: 'DELETE'
     })
   .then(function(){
+    for (fav in userStore["favorites"]) {
+      if (userStore["favorites"][fav].market_id === marketId) {
+        userStore["favorites"].splice(fav, 1)
+      }
+    }
     let favDiv = document.getElementById(`favorite-div-${marketId}`)
     favDiv.innerHTML = ''
     favDiv.innerHTML = `<p class="favorite-tag">Favorite</p>`
@@ -38,80 +45,108 @@ function createFavorite(marketId, userId){
       user_id: userId
     })
   })
-  .then(function(response){
-    return response.json()
+  .then(function(favorite){
+    return favorite.json()
   })
-  .then(function(responseJson){
-    console.log(responseJson)
+  .then(function(favoriteJson){
+    userStore["favorites"].push(favoriteJson)
     let favDiv = document.getElementById(`favorite-div-${marketId}`)
     favDiv.innerHTML = ''
-    favDiv.innerHTML = `<p data-id="${responseJson.id}" class="unfavorite-tag">Unfavorite</p>`
+    favDiv.innerHTML = `<p data-id="${favoriteJson.id}" class="unfavorite-tag">Unfavorite</p>`
   })
 }
 
+///////////////////////////////////////////////////////////////////////////
+///////// *********** Market --- Functions *******************
+
+//// functiont to fetch market instances from rails and push to user store -- MF
+function fetchAndPushMarket(marketId) {
+  let url = BASE_MARKET_URL + `/${marketId}`
+  fetch(url)
+  .then(function(response){
+    return response.json()
+  })
+  .then(function(marketObj){
+    if (marketObj !== null) {
+      userStore["markets"].push(marketObj)
+    }
+  })
+}
 
 ///////////////////////////////////////////////////////////////////////////
 ///////    ********* User  -- Functions ********************
 
 /// function to fetch and add users reviews to their profile ------------  UF
-function renderUserReviews() {
+function renderUserReviews(display = false) {
   let userReviews = document.getElementById("user-reviews")
   fetch(BASE_REVIEW_URL+`/user/${localStorage.userId}`)
   .then(function(response){
     return response.json()
   })
   .then(function(reviewsArr){
-    if (reviewsArr.length === 0 ) {
-      userReviews.innerHTML += "You Have No Reviews Yet"
-    } else {
+    if (reviewsArr.length > 0) {
       for (review of reviewsArr) {
-        userStore.reviews.push(review)
-        userReviews.innerHTML += `<div id="market-review-${review.id}" class="market-reviews">
-        <p>Created at ${review.created_at}</p>
-        <p class='title'>Review Title: ${review.review_title}</p>
-        <p class='review-content'> ${review.review_text}</p>
-        <p data-id="${review.id}" class="delete-user-review">Delete Your Review</p>
-        </div>`
+        fetchAndPushMarket(review.market_id)
+        userStore["reviews"].push(review)
+        if (display === true) {
+          userReviews.innerHTML += `<div id="market-review-${review.id}" class="market-reviews">
+          <p>Created at ${review.created_at}</p>
+          <p class='title'>${review.review_title}</p>
+          <p class='review-content'> ${review.review_text}</p>
+          <p data-id="${review.id}" class="delete-user-review">Delete Your Review</p>
+          </div>`
+        }
       }
+    } else if (reviewsArr.length === 0 && display === true) {
+      userReviews.innerHTML += "You Have No Reviews Yet"
     }
   })
 }
 
 ///function to fetch and add users favorites to their profile --------  UF
-function renderUserFavorites() {
+function renderUserFavorites(display = false) {
   let userFavorites = document.getElementById("user-favorites")
   fetch(BASE_FAVORITE_URL+`/user/${localStorage.userId}`)
   .then(function(response){
     return response.json()
   })
   .then(function(favoriteArr) {
-    if (favoriteArr.length === 0) {
-      userFavorites.innerHTML += "You Have No Favorites Yet"
-    } else {
+    if (favoriteArr.length > 0) {
       for (favorite of favoriteArr) {
-        userStore.favorites.push(favorite)
-        userFavorites.innerHTML += ``
+        fetchAndPushMarket(favorite.market_id)
+        userStore["favorites"].push(favorite)
+        if (display === true) {
+          userFavorites.innerHTML += ``
+        }
       }
+    } else if (favoriteArr.length === 0 && display === true) {
+      userFavorites.innerHTML += "You Have No Favorites Yet"
     }
   })
 }
 
+////funtion to show user logged in on header bar ----------------------  UF
+function userLoggedInDisplay() {
+  userDisplay.innerHTML= `Logged In As: ${localStorage.userName} <p id="logout-tag">Logout</p>`
+  content.innerHTML = '<img id="image-placeholder" src="images/noodles.jpeg">'
+}
 
 ///funtion to show user page -------------------------------------------  UF
 function displayUser(user) {
+  let display = true
   localStorage.setItem('userId', user.id)
   localStorage.setItem('userName', user.name)
-  userDisplay.innerHTML= `Logged In As: ${user.name}`
+  userLoggedInDisplay()
   content.innerHTML = `<div id="user-div">
   <div id="user-info">
     <h3>${user.name}</h3>
-    <h4>Memeber Since: ${user.created_at}</h4>
+    <h4>Member Since: ${user.created_at}</h4>
   </div>
   <div id="user-favorites">Favorites: </div>
   <div id="user-reviews">Reviews: </div>
   </div>`
-  renderUserReviews()
-  renderUserFavorites()
+  renderUserReviews(display)
+  renderUserFavorites(display)
 }
 
 
@@ -154,6 +189,16 @@ function createOrLogIn() {
   })
 }
 
+///funtion to log user out --------------------------------------------  UF
+function userLogOut() {
+  localStorage.clear()
+  userStore["reviews"] = []
+  userStore["favorites"] = []
+  userStore["markets"] = []
+  userDisplay.innerHTML = "Please Log In Or Create Account";
+  content.innerHTML = '<img id="image-placeholder" src="images/noodles.jpeg">'
+}
+
 ///////////////////////////////////////////////////////////////////////////
 ///////    ********* Review -- Functions ********************
 
@@ -176,11 +221,11 @@ function createReview(body){
     },
     body: JSON.stringify(body)
   })
-  .then(function(response){
-    return response.json()
+  .then(function(review){
+    return review.json()
   })
-  .then(function(responseJson){
-    // console.log(responseJson)
+  .then(function(reviewJson){
+    userStore["reviews"].push(reviewJson)
   })
 }
 
@@ -220,7 +265,7 @@ function displayMarketReviews(marketId) {
     } else {
       for(review of responseJson){
         reviewDiv.innerHTML += `<div id="market-review-${review.id}" class="market-reviews">
-        <p>Created at ${review.created_at}</p>
+        <p>Created at ${review.created_at} by ${review.user_name}</p>
         <p class='title'>Review Title: ${review.review_title}</p>
         <p class='review-content'> ${review.review_text}</p>
         </div>
@@ -273,6 +318,9 @@ window.addEventListener("click", (event) => {
     let reviewBox = document.getElementById(`market-review-${reviewId}`)
     deleteReview(reviewId)
     reviewBox.innerHTML=""
+  }
+  if (event.target.id === "logout-tag") {
+    userLogOut()
   }
 })
 
@@ -341,14 +389,26 @@ function renderResultsToPage(results) {
         <p><a href="tel:${market.phone}">${market.display_phone}</a></p>
       </div>
       <p class="add-review-tag">Add Review</p>
-    <div id="favorite-div-${market.id}"> <p class="favorite-tag">Favorite</p></div>
+    <div id="favorite-div-${market.id}"><p class="favorite-tag">Favorite</p></div>
       <div id="display-reviews-box-${market.id}"><p class="see-reviews-tag">See Reviews</p></div>
     </div>`
+    for (favs of userStore["favorites"]) {
+      let favDiv = document.getElementById(`favorite-div-${market.id}`)
+      if (favs["market_id"] === market.id) {
+        favDiv.innerHTML = `<p data-id="${favs["id"]}" class="unfavorite-tag">Unfavorite</p>`
+      }
+    }
   }
 }
 
 ///fetch from local db
 function init() {
-  userDisplay.innerHTML = "Please Log In Or Create Account";
-  content.innerHTML = '<img id="image-placeholder" src="images/noodles.jpeg">'
+  if (localStorage.length === 0) {
+    userDisplay.innerHTML = "Please Log In Or Create Account";
+    content.innerHTML = '<img id="image-placeholder" src="images/noodles.jpeg">'
+  } else {
+    userLoggedInDisplay()
+    renderUserReviews()
+    renderUserFavorites()
+  }
 }

@@ -11,4 +11,5 @@ Rails.application.routes.draw do
   get "/reviews/mkt/:id", to: 'reviews#market_show'
   get "/reviews/user/:id", to: 'reviews#user_show'
   delete "/reviews/:id", to: 'reviews#destroy'
+  get "/markets/:id", to: 'markets#show'
 end
