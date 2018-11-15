@@ -3,17 +3,25 @@
   <head>
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="style.css">
-    <title></title>
+    <style>
+      @import url('https://fonts.googleapis.com/css?family=Amita|Lato|Patua+One|Comfortaa');
+    </style>
+    <title>Taste of Home - Specialty Market Resource</title>
   </head>
   <body>
     <div class="page-header">
-      <div id="title-display"><h1>Taste Of Home</h1></div>
+      <div id="title-display">
+        <div id="user-display"></div>
+        <div id="title-div">
+          <h1>Taste Of Home</h1>
+          <p id="header-sub-text"> ~Specialty Market Resource~ </p>
+        </div>
+      </div>
       <form id="search-inputs">
         <input type="text" name="market" value="" placeholder="Market or Food Name">
         <input type="text" name="market" value="" placeholder="Location (optional)">
-        <input type="submit" value="Search">
+        <div id="submit-btn"><input type="submit" value="Search"></div>
       </form>
-      <div id="user-display"></div>
     </div>
     <div id="content-box"></div>
     <script src="index.js"></script>

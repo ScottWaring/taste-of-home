@@ -128,13 +128,18 @@ function renderUserFavorites(display = false) {
           for(marketObj of userStore["markets"]){
             if(marketObj["yelp_id"] === favorite.market_id){
               market = marketObj
+            } else {
+              fetchAndPushMarket(favorite.market_id)
+              if(marketObj["yelp_id"] === favorite.market_id){
+                market = marketObj
+              }
             }
           }
           userFavorites.innerHTML += `
-              <div data-id="${market.yelp_id}" class="favorite-box">
-              <div class="business-thumbnail">
-              <img height="20%" width="20%" src="${market.image_url}"></div>
-              <h4><a href="${market.web_url}">${market.name}</a></h4></div>`
+          <div data-id="${market.yelp_id}" class="favorite-box">
+          <div class="business-thumbnail">
+          <img height="20%" width="20%" src="${market.image_url}"></div>
+          <h4><a href="${market.web_url}">${market.name}</a></h4></div>`
         }
       }
     } else if (favoriteArr.length === 0 && display === true) {
@@ -158,8 +163,8 @@ function displayUser() {
     <h3>${localStorage.userName}</h3>
     <h4>Member Since: ${localStorage.userSince}</h4>
   </div>
-  <div id="user-favorites">Favorites: </div>
-  <div id="user-reviews">Reviews: </div>
+  <div id="user-favorites"><p class="user-text">Favorites: </p></div>
+  <div id="user-reviews"><p class="user-text">Reviews: </p></div>
   </div>`
   renderUserReviews(display)
   renderUserFavorites(display)
@@ -345,12 +350,20 @@ function displayMarketReviews(marketId) {
 window.addEventListener("click", (event) => {
   if (event.target.className === "add-review-tag") {
     let marketId = event.target.parentElement.dataset.id
-    createReviewForm(marketId)
+    if (localStorage.length === 0) {
+      alert("You need to be logged in to add a review")
+    } else {
+      createReviewForm(marketId)
+    }
   }
   if (event.target.className ==="favorite-tag") {
     let marketId = event.target.parentElement.parentElement.dataset.id
     let userId = localStorage.userId
-    createFavorite(marketId, userId)
+    if (localStorage.length === 0) {
+      alert("You need to be logged in to favorite a market")
+    } else {
+      createFavorite(marketId, userId)
+    }
   }
   if (event.target.className ==="unfavorite-tag") {
     let favoriteId = event.target.dataset.id
@@ -421,6 +434,8 @@ function formatYelpBody(input, location_input) {
 
 ///fetch from yelp via rails (backend)  ------------------------- YP
 function callYelp(body) {
+  content.innerHTML = ""
+  content.innerHTML = '<div class="loader"></div>'
   let url = BASE_SEARCH_URL
   fetch(url, {
     method: 'POST',
