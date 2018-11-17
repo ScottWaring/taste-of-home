@@ -7,7 +7,7 @@ let BASE_SEARCH_URL = 'http://localhost:3000/search'
 let BASE_FAVORITE_URL = 'http://localhost:3000/favorites'
 let BASE_REVIEW_URL = 'http://localhost:3000/reviews'
 let BASE_MARKET_URL = 'http://localhost:3000/markets'
-let formInput = document.querySelector('form')
+let formInput = document.getElementById('search-inputs')
 let content = document.getElementById('content-box')
 let userDisplay = document.getElementById("user-display")
 let userStore = {favorites: [], reviews:[], markets: []}
@@ -15,8 +15,27 @@ let userStore = {favorites: [], reviews:[], markets: []}
 ///////////////////////////////////////////////////////////////////////////
 ///////    ********* Favorite -- Functions ********************
 
+function displayFavoriteMarket(marketId){
+  let displayMarket = document.getElementById('fav-market-display')
+  for (market of userStore['markets']){
+    console.log(market)
+    if (market.yelp_id === marketId){
+      let displayAddress = market["address"]
+      displayMarket.innerHTML = `<div data-id="${market.yelp_id}" class="display-market-box">
+       <div class="users-business-thumbnail">
+         <img src="${market.image_url}">
+      </div>
+      <h4><a href="${market.web_url}">${market.name}</a></h4>
+      <p>${displayAddress}</p>
+      <p><a href="tel:${market.phone}">${market.display_phone}</a></p>
+      </div>
+      <div class="hide-display-market-box">Hide Market</div>`
+    }
+  }
+}
 // function to fetch and delete instance of favorite ---------------------- FF
 function deleteFavorite(favoriteId, marketId){
+  console.log(favoriteId, marketId)
   let url = BASE_FAVORITE_URL+`/${favoriteId}`
   fetch(url, {
     method: 'DELETE'
@@ -62,6 +81,7 @@ function createFavorite(marketId, userId){
 
 //// functiont to fetch market instances from rails and push to user store -- MF
 function fetchAndPushMarket(marketId) {
+  // console.log(marketId)
   let url = BASE_MARKET_URL + `/${marketId}`
   fetch(url)
   .then(function(response){
@@ -98,7 +118,6 @@ function renderUserReviews(display = false) {
           }
           userReviews.innerHTML += `<div id="market-review-${review.id}" class="market-reviews">
           <p> Market Name: ${market.name} </p>
-          <p>Created at ${review.created_at}</p>
           <p class='title'>${review.review_title}</p>
           <p class='review-content'> ${review.review_text}</p>
           <p data-id="${review.id}" class="delete-user-review">Delete Your Review</p>
@@ -128,18 +147,12 @@ function renderUserFavorites(display = false) {
           for(marketObj of userStore["markets"]){
             if(marketObj["yelp_id"] === favorite.market_id){
               market = marketObj
-            } else {
-              fetchAndPushMarket(favorite.market_id)
-              if(marketObj["yelp_id"] === favorite.market_id){
-                market = marketObj
-              }
             }
           }
-          userFavorites.innerHTML += `
-          <div data-id="${market.yelp_id}" class="favorite-box">
-          <div class="business-thumbnail">
-          <img height="20%" width="20%" src="${market.image_url}"></div>
-          <h4><a href="${market.web_url}">${market.name}</a></h4></div>`
+          userFavorites.innerHTML +=`
+            <h4 data-id="${market.yelp_id}" class="favorite-box">
+            ${market.name}</h4>
+            `
         }
       }
     } else if (favoriteArr.length === 0 && display === true) {
@@ -147,6 +160,7 @@ function renderUserFavorites(display = false) {
     }
   })
 }
+
 
 ////funtion to show user logged in on header bar ----------------------  UF
 function userLoggedInDisplay() {
@@ -163,8 +177,9 @@ function displayUser() {
     <h3>${localStorage.userName}</h3>
     <h4>Member Since: ${localStorage.userSince}</h4>
   </div>
-  <div id="user-favorites"><p class="user-text">Favorites: </p></div>
-  <div id="user-reviews"><p class="user-text">Reviews: </p></div>
+    <div id="user-favorites"><p class="user-text">Favorites: </p></div>
+    <div id="user-reviews"><p class="user-text">Reviews: </p></div>
+    <div id="fav-market-display"></div>
   </div>`
   renderUserReviews(display)
   renderUserFavorites(display)
@@ -268,11 +283,14 @@ function deleteReview(reviewId) {
   })
   .then(function(){
     console.log("that mutherfucker is goooone!")
+    let reviewBox = document.getElementById(`market-review-${reviewId}`)
+    reviewBox.innerHTML=""
   })
 }
 
 //function to fetch review from backend ---------------------------------- RF
 function createReview(body){
+  console.log(body)
   fetch(BASE_REVIEW_URL,{
     method: 'POST',
     headers: {
@@ -291,23 +309,25 @@ function createReview(body){
 
 ///function to create review form ----------------------------------------- RF
 function createReviewForm(marketId) {
-  let reviewDiv = document.getElementById(`display-reviews-box-${marketId}`)
-  reviewDiv.innerHTML += `<form id="add-review-form">
-  <input type="text" name="Title" placeholder="Review Title" value="">
-  <textarea name="Review Content" placeholder="Review Content Here" value=""></textarea>
+  let reviewDiv = document.getElementById(`the-display-reviews-box-${marketId}`)
+  reviewDiv.innerHTML = ""
+  reviewDiv.innerHTML += `<div class="review-form-style"><form id="add-review-form-${marketId}">
+  <p>Review Title</p><input type="text" name="Title" value=""><br>
+  <p>Your Review</p><textarea name="Review Content" value=""></textarea><br>
   <input type="submit" name="Submit Review">
-  </form>`
-  reviewDiv.addEventListener("submit", (event) => {
+  </form></div>`
+  let addReviewForm = document.getElementById(`add-review-form-${marketId}`)
+  addReviewForm.addEventListener("submit", (event) => {
     event.preventDefault()
     let body = {
       user_name: localStorage.userName,
-      review_title: event.target[0].value,
-      review_text: event.target[1].value,
+      review_title: event.target.children[1].value,
+      review_text: event.target.children[4].value,
       user_id: localStorage.userId,
       market_id: marketId
     }
     createReview(body)
-    reviewDiv.innerHTML = `<p class="see-reviews-tag">See Reviews</p>`
+    reviewDiv.innerHTML = ""
   })
 }
 
@@ -319,26 +339,27 @@ function displayMarketReviews(marketId) {
     return response.json()
   })
   .then(function(responseJson){
-    let reviewDiv =document.getElementById(`display-reviews-box-${marketId}`)
-    reviewDiv.innerHTML = ''
+    let reviewBox = document.getElementById(`the-display-reviews-box-${marketId}`)
     if(responseJson.length === 0){
-      reviewDiv.innerHTML = '<p>This market has no reviews in it</p>'
+      reviewBox.innerHTML = '<p>This market has no reviews in it</p>'
     } else {
+      reviewBox.innerHTML = ""
       for(review of responseJson){
-        reviewDiv.innerHTML += `<div id="market-review-${review.id}" class="market-reviews">
-        <p>Created at ${review.created_at} by ${review.user_name}</p>
+        reviewBox.innerHTML += `<div id="market-review-${review.id}" class="market-reviews">
         <p class='title'>Review Title: ${review.review_title}</p>
+        <p> by ${review.user_name}</p>
         <p class='review-content'> ${review.review_text}</p>
+        <div id='delete-div-${review.id}'></div>
         </div>
         `
         if (review.user_id === parseInt(localStorage.userId)) {
-          reviewDiv.innerHTML += `<p data-id="${review.id}" class="delete-user-review">Delete Your Review</p>`
+          let deleteDiv = document.getElementById(`delete-div-${review.id}`)
+          deleteDiv.innerHTML = `<p data-id="${review.id}" class="delete-user-review">Delete Your Review</p>`
         }
       }
-      reviewDiv.innerHTML += `<div><p class="hide-review-tag" data-id="${marketId}">Hide Reviews</p>
-      </div>`
+      let reviewButton = document.getElementById(`display-reviews-button-${marketId}`)
+      reviewButton.innerHTML = `<p class="hide-review-tag" data-id="${marketId}">Hide Reviews</p>`
     }
-
   })
 }
 
@@ -349,7 +370,7 @@ function displayMarketReviews(marketId) {
 /////button creation ----------------------------------------------- tBBC
 window.addEventListener("click", (event) => {
   if (event.target.className === "add-review-tag") {
-    let marketId = event.target.parentElement.dataset.id
+    let marketId = event.target.dataset.id
     if (localStorage.length === 0) {
       alert("You need to be logged in to add a review")
     } else {
@@ -357,7 +378,7 @@ window.addEventListener("click", (event) => {
     }
   }
   if (event.target.className ==="favorite-tag") {
-    let marketId = event.target.parentElement.parentElement.dataset.id
+    let marketId = event.target.parentElement.parentElement.parentElement.dataset.id
     let userId = localStorage.userId
     if (localStorage.length === 0) {
       alert("You need to be logged in to favorite a market")
@@ -367,24 +388,26 @@ window.addEventListener("click", (event) => {
   }
   if (event.target.className ==="unfavorite-tag") {
     let favoriteId = event.target.dataset.id
-    let marketId = event.target.parentElement.parentElement.dataset.id
+    let marketId = event.target.parentElement.parentElement.parentElement.dataset.id
     deleteFavorite(favoriteId,marketId)
   }
   if (event.target.id === "user-display") {
     createOrLogIn()
   }
   if (event.target.className === "see-reviews-tag"){
-    let marketId = event.target.parentElement.parentElement.dataset.id
+    let marketId = event.target.dataset.id
     displayMarketReviews(marketId)
   }
   if (event.target.className === "hide-review-tag"){
     let marketId = event.target.dataset.id
-    let reviewDiv = document.getElementById(`display-reviews-box-${marketId}`)
-    reviewDiv.innerHTML = `<p class="see-reviews-tag">See Reviews</p>`
+    let reviewButton = document.getElementById(`display-reviews-button-${marketId}`)
+    let reviewBox = document.getElementById(`the-display-reviews-box-${marketId}`)
+    reviewButton.innerHTML = `<p data-id="${marketId}" class="see-reviews-tag">See Reviews</p>`
+    reviewBox.innerHTML = ""
   }
   if (event.target.className === "delete-user-review") {
     let reviewId = event.target.dataset.id
-    let reviewBox = document.getElementById(`market-review-${reviewId}`)
+    let reviewBox = document.getElementById(`market-review-${review.id}`)
     deleteReview(reviewId)
     reviewBox.innerHTML=""
   }
@@ -396,6 +419,19 @@ window.addEventListener("click", (event) => {
   }
   if(event.target.id === "sign-up"){
     userSignUp()
+  }
+  if (event.target.id === "title-div") {
+    console.log(true)
+    content.innerHTML = '<img id="image-placeholder" src="images/noodles.jpeg">'
+  }
+  if (event.target.className === "favorite-box"){
+    let marketId = event.target.dataset.id
+    displayFavoriteMarket(marketId)
+  }
+  if (event.target.className === "hide-display-market-box"){
+    console.log(true)
+    let marketBox = document.getElementById('fav-market-display')
+    marketBox.innerHTML = ""
   }
 })
 
@@ -415,7 +451,7 @@ formInput.addEventListener('submit', (event) => {
 function formatYelpBody(input, location_input) {
   let body = {
       term: input,
-      categories: "market,supermarket,grocery,grocer"
+      categories: "market,supermarket,grocery"
     }
   if (location_input === "" ) {
     let latLongAssign = new Promise(function(resolve, reject) {
@@ -459,15 +495,20 @@ function renderResultsToPage(results) {
   const busArr = results.businesses
   for(market of busArr) {
     content.innerHTML += `<div data-id="${market.id}" class="business-box">
-    <div class="business-thumbnail"><img height="20%" width="20%" src="${market.image_url}"></div>
+      <div class="business-thumbnail">
+        <img src="${market.image_url}">
+      </div>
       <div class="business-info">
         <h4><a href="${market.url}">${market.name}</a></h4>
         <p>${market.location.display_address.join(" ")}</p>
         <p><a href="tel:${market.phone}">${market.display_phone}</a></p>
       </div>
-      <p class="add-review-tag">Add Review</p>
-    <div id="favorite-div-${market.id}" class="fav-div-box"><p class="favorite-tag">Favorite</p></div>
-      <div id="display-reviews-box-${market.id}" class="review-box"><p class="see-reviews-tag">See Reviews</p></div>
+      <div class="user-action">
+        <p data-id="${market.id}" class="add-review-tag">Add Review</p>
+        <div id="favorite-div-${market.id}" class="fav-div-box"><p class="favorite-tag">Favorite</p></div>
+        <div id="display-reviews-button-${market.id}" data-id="${market.id}"><p data-id="${market.id}" class="see-reviews-tag">See Reviews</p></div>
+      </div>
+      <div id="the-display-reviews-box-${market.id}" class="review-box"></div>
     </div>`
     for (favs of userStore["favorites"]) {
       let favDiv = document.getElementById(`favorite-div-${market.id}`)

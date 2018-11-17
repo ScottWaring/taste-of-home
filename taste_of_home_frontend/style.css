@@ -29,14 +29,15 @@ a {
 }
 
 .content-box {
-  font-family: 'Raleway Dots';
+  font-family: 'Roboto';
 }
 
-#page-header {
+.page-header {
   background-image: linear-gradient(to bottom, white, #7997A1);
   background-size: cover;
   background-repeat: no-repeat;
   height: 100%;
+  margin-bottom: 4em;
 }
 
 #header-sub-text {
@@ -63,8 +64,8 @@ a {
 #title-display h1{
   position: relative;
   text-align: center;
-  font-family: 'Amita';
-  text-shadow: 2px 2px #ad9e8a;
+  font-family: 'Kaushan Script';
+  text-shadow: 2px 2px yellow;
   font-size: 4em;
   padding-bottom: 0;
   margin-bottom: 0;
@@ -72,11 +73,12 @@ a {
 
 #search-inputs {
   float: right;
-  font-family: 'Lato';
+  font-family: 'Roboto';
+  width: 30%;
 }
 
 #search-inputs submit{
-  font-family: 'Lato';
+  font-family: 'Roboto';
 }
 
 #user-info {
@@ -96,12 +98,12 @@ a {
   margin-top: 1em;
   height: 2em;
   width: 20%;
-  font-family: 'Lato';
+  font-family: 'Roboto';
   cursor: default;
 }
 
 #user-display p {
-  font-family: 'Lato';
+  font-family: 'Roboto';
 }
 
 #user-logged-in {
@@ -128,13 +130,13 @@ a {
 
 #submit-btn {
   margin-top: 1em;
-  font-family: 'Lato';
+  font-family: 'Roboto';
   border-style: none;
 }
 
 #sign-up {
   padding-top: 1em;
-  font-family: 'Lato';
+  font-family: 'Roboto';
 }
 
 #title-div {
@@ -143,42 +145,201 @@ a {
   margin-left: 25%;
 }
 
-.market-reviews {
-  font-family: 'Lato';
-}
+
 
 .favorite-box {
-  font-family: 'Lato';
+  font-family: 'Roboto';
 }
 
 .user-text {
-  font-family: 'Lato';
+  font-family: 'Roboto';
 }
 
-.business-box {
-  display: inline;
-  font-family: 'Comfortaa';
+/* .business-box p, h4{
+  text-align: center;
+} */
+
+
+
+a:hover {
+    color: #FF00FF;
 }
 
-.business_thumbnail {
+.business-thumbnail {
   display: inline-block;
-  position: relative;
+  margin-top: 30px;
+  width: 300px;
+  height: 200px;
   float: left;
-  width: 25%;
+}
+
+.business-thumbnail img{
+  border-radius: 30px;
+  width: 100%;
+  height: 100%;
+}
+
+.see-reviews-tag:hover {
+    color: green;
+}
+
+.add-review-tag:hover {
+    color: green;
+}
+
+.favorite-tag:hover {
+    color: green;
 }
 
 .business-info {
-  display: inline-block;
   float: left;
-  width: 50%;
+  font-size: 1em;
+  font-family: 'Roboto';
+  /* border-style: solid; */
+  margin: 1%;
+  /* height: 90%; */
+  width: 20%;
+  text-align: center;
+  padding-top: 3%;
+  padding-bottom: 3%;
+
 }
 
-.fav-div-box {
-  float: right;
-  height: 50%;
+.business-box {
+  height: 300px;
+  font-family: 'Roboto';
+  /* border-style: dashed; */
+  padding: 1%;
 }
-
 .review-box {
-  float: right;
-  height: 50%;
+  overflow: scroll;
+  width: 30%;
+  height: 90%;
+  /* border-style: solid; */
+  display: inline-block;
+  margin: 1%;
+  margin-right: 3%;
+}
+
+.market-reviews {
+  font-family: 'Roboto';
+  /* border-style: solid; */
+  margin: 1%;
+}
+
+.user-action {
+  padding: 3%;
+  /* width: 20%;
+  height: 90%; */
+  /* background-color: linen; */
+  float: left;
+  margin: 1%;
+  margin-right: 2%;
+  /* box-shadow: 5px 10px #888888; */
+  font-size: 20px;
+  cursor: pointer;
+  /* border-style: solid; */
+}
+
+.review-form-style {
+  /* border-style: solid; */
+  text-align: center;
+  padding: 5%;
+  align: center;
+  width: 50%;
+  margin: 0 auto;
+}
+
+#user-favorites {
+  /* border-style: solid; */
+  display: block;
+  margin-top: 5em;
+  height:500px;
+  overflow: scroll;
+  width: 20%;
+}
+
+.favorite-box {
+  /* border-style: solid; */
+  /* display: inline-block; */
+  /* float: left; */
+  height: 2em;
+  width: 100%;
+}
+
+.users-business-thumbnail {
+  padding-left: 5em;
+  width: 15em;
+  height: 15em;
+}
+
+.users-business-thumbnail img{
+  border-radius: 1em;
+  width: 100%;
+  height: 100%;
+}
+
+h4{
+  text-align: center;
+}
+
+.market-reviews{
+  /* border-style: solid; */
+  text-align: center;
+  font-size: 2em;
+  font-family: serif;
+}
+
+#user-reviews p{
+  margin: 0 auto;
+}
+
+#user-reviews {
+  /* border-style: solid; */
+  margin-top: 5em;
+  height:500px;
+  overflow: scroll;
+  width: 20%;
+  float: left;
+  display: inline-block;
+  font-family: 'Roboto';
+}
+
+.market-reviews {
+  font-family: 'Roboto';
+}
+
+#user-div {
+  display: inline-block;
+  height : 100%;
+  width: 100%;
+  font-family: 'Roboto';
+}
+
+#user-info {
+  margin: 2%;
+  padding: 2%;
+  width: 10%;
+  float: left;
+  display: inline-block;
+  font-family: 'Roboto';
+}
+
+#user-favorites {
+  margin: 2%;
+  padding: 2%;
+  width: 20%;
+  float: left;
+  display: inline-block;
+  font-family: 'Roboto';
+}
+
+#fav-market-display {
+  text-align: center;
+  margin: 2%;
+  padding: 2%;
+  width: 20%;
+  float: left;
+  display: inline-block;
+  font-family: 'Roboto';
 }
